@@ -63,7 +63,7 @@ while t < T:
     ################## They need to receive the info of the particule, recompute their heap for this particle and go back to time of proc 1 
     ################## We need to check for forward in time (might still send a particle to the other side and we need to know that) 
     ################## and backward in time 
-    
+
     ########## subbox2 for subbox 1 from rank1 to rank0 : 
     ########## 
 
@@ -72,6 +72,7 @@ while t < T:
     print(t)
     # possible collision
     entry = heapq.heappop(heap)
+    # entry[0] is the time of the collision
     
     if not isinstance(entry[4],str):
         # checking if collision is valid event

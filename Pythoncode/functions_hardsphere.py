@@ -129,3 +129,84 @@ def collision(entry):
         
         return posi, veli, None, None
 
+
+def update_heap(L,t,simulation,entry,initial_state,heap,subbox):
+    t=entry[0]
+    if not isinstance(entry[4],str):
+        # checking if collision is valid event
+        if entry[1] < L[entry[3].n]:
+            pass
+        elif entry[1] < L[entry[4].n]:
+            pass
+        else: # collision valid
+            
+            # updating last collision times
+            L[entry[3].n] = entry[0]
+            L[entry[4].n] = entry[0]
+            
+            # new particle pos and vel
+            posi, veli, posj, velj = collision(entry)
+            
+            #save previous pos and vel
+            simulation.append([entry[0], entry[3].n, entry[4].n, posi, posj, veli, velj])
+
+    #         # update pos and vel
+    #         entry[3].update(posi, veli)
+    #         entry[4].update(posj, velj) # this will change all heap pos and vels
+    #         # may not matter as they're no longer be valid?
+            
+    #         # update heap
+    #         for i in initial_state:
+    #             # collisions with first sphere
+    #             dt = check_collision(i, entry[3])
+    #             if dt != None:
+    #                 heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[3]))
+    #             # collisions with second
+    #             dt = check_collision(i, entry[4])
+    #             if dt != None:
+    #                 heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[4]))
+            
+    #         #update heap with wall collissions
+    #         dtw, w = wall_collisions(10,entry[3],subbox)
+    #         if dtw != None:
+    #             heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
+    #         dtw, w = wall_collisions(10,entry[4],subbox)
+    #         if dtw != None:
+    #             heapq.heappush(heap,(dtw + entry[0],entry[0],entry[4].n,entry[4],w))
+                    
+    #         # update time counter
+    #         t = entry[0]
+    # else:
+    #     # checking if collision is valid event
+    #     if entry[1] < L[entry[3].n]:
+    #         pass
+    #     else: # collision valid
+            
+    #         # updating last collision times
+    #         L[entry[3].n] = entry[0]
+            
+    #         # new particle pos and vel
+    #         posi, veli, posj, velj = collision(entry)
+            
+    #         #save previous pos and vel
+    #         simulation.append([entry[0], entry[3].n, posi, veli, entry[4]])
+
+    #         # update pos and vel
+    #         entry[3].update(posi, veli)
+            
+    #         # update heap
+    #         for i in initial_state:
+    #             # collisions with first sphere
+    #             dt = check_collision(i, entry[3])
+    #             if dt != None:
+    #                 heapq.heappush(heap, (dt + entry[0],entry[0],i.n, i, entry[3]))
+            
+    #         #update heap with wall collissions
+    #         dtw, w = wall_collisions(10,entry[3],subbox)
+    #         if dtw != None:
+    #             heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
+                
+    #         # update time counter
+    #         t = entry[0]
+
+    # return (L,t,simulation,entry,heap)
