@@ -130,7 +130,7 @@ def collision(entry):
         return posi, veli, None, None
 
 
-def update_heap(L,t,simulation,entry,initial_state,heap,subbox,comm,rank):
+def update_heap(L,t,simulation,entry,initial_state,heap,subbox,special_walls_subbox,comm,rank):
     t=entry[0]
     if not isinstance(entry[4],str):
         # checking if collision is valid event
@@ -185,7 +185,9 @@ def update_heap(L,t,simulation,entry,initial_state,heap,subbox,comm,rank):
         else: # collision valid
 
             ## subbox[4] contains a list of string with the special walls, if the wall concerned is in the list of the special wall:
-            if entry[4] in subbox[4]:
+            if entry[4] in special_walls_subbox[0]:
+                index_wall = special_walls_subbox[0].index(entry[4])
+                rank_receive = special_walls_subbox[1][index_wall] #gives the corresponding rank of the subbox that receives the information
             ###############         WORK IN PROGRESS       ###############
             ##############################################################
             ##### If one of them hit a special wall: 
@@ -196,15 +198,15 @@ def update_heap(L,t,simulation,entry,initial_state,heap,subbox,comm,rank):
                     ## if we were to have more subbox, we would need to handle in which other processor
                     ## this particle crossing the wall would end up in. 
                     ## let's stick to a simple case for now. 
-                    comm.send(entry, dest=0, tag=1)
-                    if rank==0:
+                    comm.send(entry, dest=rank_receive, tag=1)
+                    if rank==rank_receive:
                         entry_received = comm.recv(source=1, tag=1)
                         ##################### TO COMPLETE #############################
                         ## do something about that received entry
                     
                 elif rank== 0: 
-                    comm.send(entry, dest=1, tag=1)
-                    if rank==1:
+                    comm.send(entry, dest=rank_receive, tag=1)
+                    if rank==rank_receive:
                         entry_received = comm.recv(source=0, tag=1)
                         ##################### TO COMPLETE #############################
                         ## do something about that received entry, most likely what is below:
@@ -213,11 +215,7 @@ def update_heap(L,t,simulation,entry,initial_state,heap,subbox,comm,rank):
                         ################## Subbox 2 needs to receive it and check the time. if proc2 time < proctime 1
                         ################## They need to receive the info of the particule, recompute their heap for this particle and go back to time of proc 1 
                         ################## We need to check for forward in time (might still send a particle to the other side and we need to know that) 
-                        ################## and backward in time 
-
-            ########## subbox2 for subbox 1 from rank1 to rank0 : 
-            ########## 
-
+                        ################## and backward in time  
             ##################################################################
 
 

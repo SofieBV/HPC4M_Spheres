@@ -18,8 +18,13 @@ nr_proc = comm.Get_size()
 l=10 #size of the box
 # Each processor handle a subbox of coordinates:
 # [top left, top right, bottom right, bottom left]
-subbox1=[[-l/2,l/2],[l/2,l/2],[l/2,0],[-l/2,0],"bottom"]
-subbox2=[[-l/2,0],[l/2,0],[l/2,-l/2],[-l/2,-l/2],"top"]
+subbox1=[[-l/2,l/2],[l/2,l/2],[l/2,0],[-l/2,0]]
+# when the particle hits the first special wall, it's the rank 1 that needs to receive it
+# for example if the particle hits the wall bottom, rank 1 contains the bottom subbox and should be ready to receive it. 
+special_walls_subbox1=[["bottom"],[1]] 
+subbox2=[[-l/2,0],[l/2,0],[l/2,-l/2],[-l/2,-l/2]]
+special_walls_subbox2=[["top"],[0]] 
+
 
 if rank==0:
     inputs_nr = 2
@@ -28,6 +33,7 @@ if rank==0:
     inputs_rad =   0.1*np.ones(2)
     inputs_mass =  0.1*np.ones(2)
     subbox=subbox1
+    special_walls_subbox = special_walls_subbox1
     special_wall = "bottom"
     IS = initial_state(2,inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
@@ -39,6 +45,7 @@ elif rank==1:
     inputs_rad =   0.1*np.ones(2)
     inputs_mass =  0.1*np.ones(2)
     subbox=subbox2
+    special_walls_subbox = special_walls_subbox2
     IS = initial_state(2,inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
 else:
@@ -75,7 +82,7 @@ while t < T:
     entry = heapq.heappop(heap)
 
     ## Update the heap structure with the function update heap    
-    (L,t,simulation,entry,heap) = update_heap(L,t,simulation,entry,IS,heap,subbox,comm,rank)
+    (L,t,simulation,entry,heap) = update_heap(L,t,simulation,entry,IS,heap,subbox,special_walls_subbox,comm,rank)
 
 
 ############### TRY TO RUN THE COLLISION ##########################################################################################
