@@ -130,11 +130,11 @@ def collision(entry):
         return posi, veli, None, None
 
 
-def update_heap(L,t,simulation,entry,initial_state,heap,subbox):
+def update_heap(L,t,simulation,entry,initial_state,heap,subbox,comm,rank):
     t=entry[0]
     if not isinstance(entry[4],str):
         # checking if collision is valid event
-        if entry[1] < L[entry[3].n]:
+        if entry[1] < L[entry[3].n]: 
             pass
         elif entry[1] < L[entry[4].n]:
             pass
@@ -150,63 +150,107 @@ def update_heap(L,t,simulation,entry,initial_state,heap,subbox):
             #save previous pos and vel
             simulation.append([entry[0], entry[3].n, entry[4].n, posi, posj, veli, velj])
 
-    #         # update pos and vel
-    #         entry[3].update(posi, veli)
-    #         entry[4].update(posj, velj) # this will change all heap pos and vels
-    #         # may not matter as they're no longer be valid?
+            # update pos and vel
+            entry[3].update(posi, veli)
+            entry[4].update(posj, velj) # this will change all heap pos and vels
+            # may not matter as they're no longer be valid?
             
-    #         # update heap
-    #         for i in initial_state:
-    #             # collisions with first sphere
-    #             dt = check_collision(i, entry[3])
-    #             if dt != None:
-    #                 heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[3]))
-    #             # collisions with second
-    #             dt = check_collision(i, entry[4])
-    #             if dt != None:
-    #                 heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[4]))
+            # update heap
+            for i in initial_state:
+                # collisions with first sphere
+                dt = check_collision(i, entry[3])
+                if dt != None:
+                    heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[3]))
+                # collisions with second
+                dt = check_collision(i, entry[4])
+                if dt != None:
+                    heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[4]))
             
-    #         #update heap with wall collissions
-    #         dtw, w = wall_collisions(10,entry[3],subbox)
-    #         if dtw != None:
-    #             heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
-    #         dtw, w = wall_collisions(10,entry[4],subbox)
-    #         if dtw != None:
-    #             heapq.heappush(heap,(dtw + entry[0],entry[0],entry[4].n,entry[4],w))
+            #update heap with wall collissions
+            dtw, w = wall_collisions(10,entry[3],subbox)
+            if dtw != None:
+                heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
+            dtw, w = wall_collisions(10,entry[4],subbox)
+            if dtw != None:
+                heapq.heappush(heap,(dtw + entry[0],entry[0],entry[4].n,entry[4],w))
                     
-    #         # update time counter
-    #         t = entry[0]
-    # else:
-    #     # checking if collision is valid event
-    #     if entry[1] < L[entry[3].n]:
-    #         pass
-    #     else: # collision valid
-            
-    #         # updating last collision times
-    #         L[entry[3].n] = entry[0]
-            
-    #         # new particle pos and vel
-    #         posi, veli, posj, velj = collision(entry)
-            
-    #         #save previous pos and vel
-    #         simulation.append([entry[0], entry[3].n, posi, veli, entry[4]])
+            # update time counter
+            t = entry[0]
 
-    #         # update pos and vel
-    #         entry[3].update(posi, veli)
-            
-    #         # update heap
-    #         for i in initial_state:
-    #             # collisions with first sphere
-    #             dt = check_collision(i, entry[3])
-    #             if dt != None:
-    #                 heapq.heappush(heap, (dt + entry[0],entry[0],i.n, i, entry[3]))
-            
-    #         #update heap with wall collissions
-    #         dtw, w = wall_collisions(10,entry[3],subbox)
-    #         if dtw != None:
-    #             heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
+    ### Collision with a wall, something extra needs to be done if it's a special wall
+    else:
+        # checking if collision is valid event
+        if entry[1] < L[entry[3].n]:
+            pass
+        else: # collision valid
+
+            ## subbox[4] contains a list of string with the special walls, if the wall concerned is in the list of the special wall:
+            if entry[4] in subbox[4]:
+            ###############         WORK IN PROGRESS       ###############
+            ##############################################################
+            ##### If one of them hit a special wall: 
+            ##### The 2 boxes need to communicate, one can assume that it is always the rank 0 processor that handles the shits 
+            ##### In the case of a particle crossing a special wall in the subbox 2 
+                if rank == 1:
+                    ## in this case, it is pretty simple, because we only have two subbox, 
+                    ## if we were to have more subbox, we would need to handle in which other processor
+                    ## this particle crossing the wall would end up in. 
+                    ## let's stick to a simple case for now. 
+                    comm.send(entry, dest=0, tag=1)
+                    if rank==0:
+                        entry_received = comm.recv(source=1, tag=1)
+                        ##################### TO COMPLETE #############################
+                        ## do something about that received entry
+                    
+                elif rank== 0: 
+                    comm.send(entry, dest=1, tag=1)
+                    if rank==1:
+                        entry_received = comm.recv(source=0, tag=1)
+                        ##################### TO COMPLETE #############################
+                        ## do something about that received entry, most likely what is below:
+                        ########## then tell the box that is being crossed (and add the right rank condition)
+                        ########## Send info from subbox1 to subbox 2  (from rank0 to rank1) : 
+                        ################## Subbox 2 needs to receive it and check the time. if proc2 time < proctime 1
+                        ################## They need to receive the info of the particule, recompute their heap for this particle and go back to time of proc 1 
+                        ################## We need to check for forward in time (might still send a particle to the other side and we need to know that) 
+                        ################## and backward in time 
+
+            ########## subbox2 for subbox 1 from rank1 to rank0 : 
+            ########## 
+
+            ##################################################################
+
+
+                ############ do something
+                pass
+
+            #### 
+            else:
+                # updating last collision times
+                L[entry[3].n] = entry[0]
                 
-    #         # update time counter
-    #         t = entry[0]
+                # new particle pos and vel
+                posi, veli, posj, velj = collision(entry)
+                
+                #save previous pos and vel
+                simulation.append([entry[0], entry[3].n, posi, veli, entry[4]])
 
-    # return (L,t,simulation,entry,heap)
+                # update pos and vel
+                entry[3].update(posi, veli)
+                
+                # update heap
+                for i in initial_state:
+                    # collisions with first sphere
+                    dt = check_collision(i, entry[3])
+                    if dt != None:
+                        heapq.heappush(heap, (dt + entry[0],entry[0],i.n, i, entry[3]))
+                
+                #update heap with wall collissions
+                dtw, w = wall_collisions(10,entry[3],subbox)
+                if dtw != None:
+                    heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
+                    
+                # update time counter
+                t = entry[0]
+
+    return (L,t,simulation,entry,heap)
