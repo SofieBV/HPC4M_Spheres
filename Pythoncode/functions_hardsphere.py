@@ -41,36 +41,43 @@ def check_collision(i,j):
     return None
 
 #### below is yet to be incorportated in simulation ####
-def wall_collisions(l, i):
+def wall_collisions(l, i,subbox1):
     # collisions with lXl square wall centered at (0,0)
     dts = []
     wall = []
+
+    #coordinate of each corner
+    topleft = subbox1[0]
+    topright = subbox1[1]
+    bottomright=subbox1[2]
+    bottomleft=subbox1[3]
+
 
     if i.vel[0] == 0 and i.vel[1] ==0:
         return None, None
     else:
         # collision with left wall
         if i.vel[0] < 0:
-            rx = -(i.pos[0]-i.rad + l/2)
+            rx = -(i.pos[0]-i.rad -topleft[0])
             dt = rx/i.vel[0]
             dts.append(dt)
             wall.append('left')
         elif i.vel[0] > 0:  
             # collision with right wall
-            rx = l/2 - (i.pos[0]+i.rad)
+            rx = topright[0] - (i.pos[0]+i.rad)
             dt = rx/i.vel[0]
             dts.append(dt)
             wall.append('right')
         
         # collision with top wall
         if i.vel[1] > 0:
-            ry = l/2 - (i.pos[1]+i.rad)
+            ry = topright[1] - (i.pos[1]+i.rad)
             dt = ry/i.vel[1]
             dts.append(dt)
             wall.append('top')
         elif i.vel[1] < 0:
             # collision with bottom wall
-            ry = -(i.pos[1]-i.rad + l/2)
+            ry = -(i.pos[1]-i.rad -bottomleft[1])
             dt = ry/i.vel[1]
             dts.append(dt)
             wall.append('bottom')
@@ -80,10 +87,10 @@ def wall_collisions(l, i):
 
         return dtw, w
 
-def create_heap(IS,subbox1):
+def create_heap(IS,subbox):
     heap_list = []
     for i in IS:
-        dtw, w = wall_collisions(10,i)
+        dtw, w = wall_collisions(10,i,subbox)
         if dtw != None:
             heap_list.append((dtw,0,i.n,i,w))
         for jn in range(i.n+1,len(IS)):
