@@ -20,8 +20,12 @@ if rank == 0:
     data = [1,2,"hello"]
     comm.send(data, dest=1, tag=1)
 elif rank == 1:
-    data = comm.recv(source=0, tag=1)
-    data += ["world"]
+    #data = comm.recv(source=0, tag=1)
+    while not comm.Iprobe(source = 0, tag=1):
+        print('not yet')
+    data = comm.Iprobe(source=0,tag=1)
+    #data = comm.gather(buffer = 1,root=0)
+    #data += ["world"]
     
 print("This is rank {} and my data is {}.".format(rank, data))
 

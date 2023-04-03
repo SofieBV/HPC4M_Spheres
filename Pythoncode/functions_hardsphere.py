@@ -41,7 +41,7 @@ def check_collision(i,j):
     return None
 
 #### below is yet to be incorportated in simulation ####
-def wall_collisions(l, i,subbox1):
+def wall_collisions(i,subbox1):
     # collisions with lXl square wall centered at (0,0)
     dts = []
     wall = []
@@ -90,7 +90,7 @@ def wall_collisions(l, i,subbox1):
 def create_heap(IS,subbox):
     heap_list = []
     for i in IS:
-        dtw, w = wall_collisions(10,i,subbox)
+        dtw, w = wall_collisions(i,subbox)
         if dtw != None:
             heap_list.append((dtw,0,i.n,i,w))
         for jn in range(i.n+1,len(IS)):
@@ -167,10 +167,10 @@ def update_heap(L,t,simulation,entry,initial_state,heap,subbox,special_walls_sub
                     heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[4]))
             
             #update heap with wall collissions
-            dtw, w = wall_collisions(10,entry[3],subbox)
+            dtw, w = wall_collisions(entry[3],subbox)
             if dtw != None:
                 heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
-            dtw, w = wall_collisions(10,entry[4],subbox)
+            dtw, w = wall_collisions(entry[4],subbox)
             if dtw != None:
                 heapq.heappush(heap,(dtw + entry[0],entry[0],entry[4].n,entry[4],w))
                     
@@ -244,7 +244,7 @@ def update_heap(L,t,simulation,entry,initial_state,heap,subbox,special_walls_sub
                         heapq.heappush(heap, (dt + entry[0],entry[0],i.n, i, entry[3]))
                 
                 #update heap with wall collissions
-                dtw, w = wall_collisions(10,entry[3],subbox)
+                dtw, w = wall_collisions(entry[3],subbox)
                 if dtw != None:
                     heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
                     
