@@ -28,7 +28,7 @@ special_walls_subbox2=[["top"],[0]]
 
 if rank==0:
     inputs_nr = 2
-    inputs_pos =  [np.array([0.3,0.1]), np.array([0.5,0.1])]
+    inputs_pos =  [np.array([0.3,0.2]), np.array([0.5,0.2])]
     inputs_vel =  [np.array([-1,0]), np.array([0,0])]
     inputs_rad =   0.1*np.ones(2)
     inputs_mass =  0.1*np.ones(2)
@@ -39,7 +39,7 @@ if rank==0:
 
 elif rank==1:
     inputs_nr = 2
-    inputs_pos =  [np.array([-1,-0.1]), np.array([1,-1])]
+    inputs_pos =  [np.array([-1,-0.2]), np.array([1,-1])]
     inputs_vel =  [np.array([0,1]), np.array([-1,0])]
     inputs_rad =   0.1*np.ones(2)
     inputs_mass =  0.1*np.ones(2)
@@ -184,14 +184,18 @@ while t < T:
     elif rank == n-1:
         new_entry = comm.recv(source=n, tag=2)
         if new_entry != None:
-            print('do something')
+            print('do something', new_entry)
             
             # updating last collision times
             L[new_entry[3].n] = new_entry[0]
             
-            veli = entry[3].vel
-            dt = 2*entry[3].rad / veli[1]
-            posi = entry[3].pos + veli*dt
+            veli = new_entry[3].vel
+            if new_entry[4] == 'bottom' or new_entry[4] == 'top':
+                dt = 2*new_entry[3].rad / veli[1]
+            else:
+                dt = 2*new_entry[3].rad / veli[0]
+            
+            posi = new_entry[3].pos + veli*dt
             # update pos and vel
             entry[3].update(posi, veli)
             
