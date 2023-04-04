@@ -18,8 +18,10 @@ class Sphere():
 
 def initial_state(nr, positions, velocities, rad, mass):
     IS = []
-    for n in range(nr):
-        IS.append(Sphere(n,positions[n], velocities[n], rad[n], mass[n]))
+    i = 0
+    for n in nr:
+        IS.append(Sphere(n,positions[i], velocities[i], rad[i], mass[i]))
+        i+=1
     return IS
 
 def check_collision(i,j):
@@ -74,6 +76,7 @@ def wall_collisions(i,subbox1):
             ry = topright[1] - (i.pos[1]+i.rad)
             dt = ry/i.vel[1]
             dts.append(dt)
+            print('topwall', dt)
             wall.append('top')
         elif i.vel[1] < 0:
             # collision with bottom wall

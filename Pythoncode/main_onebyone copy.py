@@ -34,7 +34,7 @@ if rank==0:
     inputs_mass =  0.1*np.ones(2)
     subbox=subbox1
     special_walls_subbox = special_walls_subbox1
-    IS = initial_state([0,1],inputs_pos,inputs_vel,inputs_rad,inputs_mass)
+    IS = initial_state(2,inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
 
 elif rank==1:
@@ -45,7 +45,7 @@ elif rank==1:
     inputs_mass =  0.1*np.ones(2)
     subbox=subbox2
     special_walls_subbox = special_walls_subbox2
-    IS = initial_state([2,3],inputs_pos,inputs_vel,inputs_rad,inputs_mass)
+    IS = initial_state(2,inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
 else:
     heap=[]
@@ -54,19 +54,16 @@ else:
 #### initialise state and run collisions up to time T ####
 #### throws up error due to lack of wall ####
 
-T = 7
-L = -np.ones(4) # last collision time for each atom
+T = 10
+L = -np.ones(len(IS)) # last collision time for each atom
 simulation = [] # any collisions that happened. 
 oldheap = [] # any collisions that have not happened, we need to save if we ever need them afterward
 
 t = 0
 # possible collision
-#entry = heapq.heappop(heap)
+entry = heapq.heappop(heap)
 
 while t < T:
-
-    # get new entry
-    entry = heapq.heappop(heap)
 
     print(rank,entry)
 
@@ -79,7 +76,6 @@ while t < T:
         if entry[0] >= t_r0:
             n = 0
             t = t_r0 # update time counter
-            heapq.heappush(heap, entry)
         else:
             t = entry[0] # update time counter
     
@@ -90,7 +86,6 @@ while t < T:
             t = entry[0] # update time counter
         else:
             t = t_r1 # update time counter
-            heapq.heappush(heap, entry)
     
     if rank == n:      
         if not isinstance(entry[4],str):
@@ -155,7 +150,19 @@ while t < T:
                     rank_receive = special_walls_subbox[1][index_wall] #gives the corresponding rank of the subbox that receives the information
                 ###############         WORK IN PROGRESS       ###############
                     
-                    comm.send(entry, dest=rank_receive, tag=2)
+                    veli = entry[3].vel
+                    if entry[4] == 'bottom' or entry[4] == 'top':
+                        dts = 2*entry[3].rad / veli[1]
+                    else:
+                        dts = 2*entry[3].rad / veli[0]
+                    
+                    posi = entry[3].pos + veli*dts
+                    # update pos and vel
+                    entry[3].update(posi, veli)
+                    t += dts
+                    new_entry = (entry[0] + dts, entry[1] + dts, entry[2], entry[3], entry[4])
+                    
+                    comm.send(new_entry, dest=rank_receive, tag=2)
                     ## still need some way to check if anything is being sent!
 
                 #### 
@@ -183,41 +190,34 @@ while t < T:
                     
                     # send that it's all good
                     comm.send(None, dest=1-n, tag=2)  
+        # get new entry
+        entry = heapq.heappop(heap)
     
     elif rank == 1-n:
-        new_entry = comm.recv(source=n, tag=2)
-
-        if new_entry != None:
-            print('do something', new_entry)
+        entry = comm.recv(source=n, tag=2)
+        if entry != None:
+            #print('do something', new_entry)
             
             # updating last collision times
-            L[new_entry[3].n] = new_entry[0]
-            
-            veli = new_entry[3].vel
-            if new_entry[4] == 'bottom' or new_entry[4] == 'top':
-                dts = new_entry[0] - new_entry[1] + 2*new_entry[3].rad / abs(veli[1])
-            else:
-                dts = new_entry[0] - new_entry[1] + 2*new_entry[3].rad / abs(veli[0])
-            
-            posi = new_entry[3].pos + veli*dts
-            # update pos and vel
-            new_entry[3].update(posi, veli)
+            L[entry[3].n] = entry[0]
+            t = entry[0]
             
             #save previous pos and vel
-            simulation.append([new_entry[0], new_entry[3].n, posi, veli, new_entry[4]])
+            simulation.append([entry[0], entry[3].n, entry[3].pos, entry[3].vel, entry[4]])
             
             # update heap
             for i in IS:
                 # collisions with first sphere
-                dt = check_collision(i, new_entry[3])
+                dt = check_collision(i, entry[3])
                 if dt != None:
-                    heapq.heappush(heap, (dt + new_entry[0],new_entry[0],i.n, i, new_entry[3]))
-            IS.append(new_entry[3])
+                    heapq.heappush(heap, (dt + entry[0],entry[0],i.n, i, entry[3]))
+            IS.append(entry[3])
             
             #update heap with wall collissions
-            dtw, w = wall_collisions(new_entry[3],subbox)
+            dtw, w = wall_collisions(entry[3],subbox)
             if dtw != None:
-                heapq.heappush(heap,(dtw + new_entry[0],new_entry[0],new_entry[3].n,new_entry[3],w))
+                heapq.heappush(heap,(dtw + entry[0],entry[0],entry[3].n,entry[3],w))
+
 
 ############### TRY TO RUN THE COLLISION ##########################################################################################
 
