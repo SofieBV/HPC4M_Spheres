@@ -13,73 +13,71 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 nr_proc = comm.Get_size()
 #########################################################################################################
-# N=10 #number of particles in each processor
-# 
-l=10 #size of the box
+
+############################### DEFINING THE INITIAL CONDITIONS #############################################
+l=5 #size of the box
+
 # Each processor handle a subbox of coordinates:
 # [top left, top right, bottom right, bottom left]
-subbox1=[[-l/2,l/2],[l/2,l/2],[l/2,0],[-l/2,0]]
 # when the particle hits the first special wall, it's the rank 1 that needs to receive it
 # for example if the particle hits the wall bottom, rank 1 contains the bottom subbox and should be ready to receive it. 
-special_walls_subbox1=[["bottom"],[1]] 
-subbox2=[[-l/2,0],[l/2,0],[l/2,-l/2],[-l/2,-l/2]]
-special_walls_subbox2=[["top"],[0]] 
-
 
 if rank==0:
     inputs_nr = 2
-    inputs_pos =  [np.array([0.3,0.2]), np.array([0.5,0.2])]
-    inputs_vel =  [np.array([-1,0]), np.array([0,0])]
+    inputs_pos =  [np.array([0.3,0.2]), np.array([1,0.6])]
+    inputs_vel =  [np.array([-0.97,0]), np.array([0,-1])]
     inputs_rad =   0.1*np.ones(2)
     inputs_mass =  0.1*np.ones(2)
-    subbox=subbox1
-    special_walls_subbox = special_walls_subbox1
+    subbox= [[-l/2,l/2],[l/2,l/2],[l/2,0],[-l/2,0]] 
+    special_walls_subbox = [["bottom"],[1]] 
     IS = initial_state([0,1],inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
 
 elif rank==1:
     inputs_nr = 2
     inputs_pos =  [np.array([-1,-0.2]), np.array([1,-1])]
-    inputs_vel =  [np.array([0,1]), np.array([-1,0])]
+    inputs_vel =  [np.array([0,1]), np.array([0,-0.1])]
     inputs_rad =   0.1*np.ones(2)
     inputs_mass =  0.1*np.ones(2)
-    subbox=subbox2
-    special_walls_subbox = special_walls_subbox2
+    subbox=[[-l/2,0],[l/2,0],[l/2,-l/2],[-l/2,-l/2]]
+    special_walls_subbox = [["top"],[0]]
     IS = initial_state([2,3],inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
 else:
     heap=[]
 
-############### TRY TO RUN THE COLLISION ##########################################################################################
+############### RUN THE COLLISION ##########################################################################################
 #### initialise state and run collisions up to time T ####
 #### throws up error due to lack of wall ####
 
-T = 7
-L = -np.ones(4) # last collision time for each atom
+T = 10 # until time T
+L = -np.ones(4) # last collision time for each atom,
 simulation = [] # any collisions that happened. 
-oldheap = [] # any collisions that have not happened, we need to save if we ever need them afterward
+t = 0 # intitialise time
 
-t = 0
-# possible collision
-#entry = heapq.heappop(heap)
-
+# run the time loop
 while t < T:
 
     # get new entry
     entry = heapq.heappop(heap)
+    # print to verify
+    # print(rank,entry)
 
-    print(rank,entry)
-
-    n = 1
-    if rank == 0:
+    # We are trying to figure which processor should start running and eventually sending a message to the other. 
+    n = 1 # intialise the processor (rank 1 is the default one)
+    # from box 0(proc 0) to box 1 (proc 1), send the time of the first collision
+    if rank == 0: 
         comm.send(entry[0], dest=1, tag=1)
+    # from box 1(proc 1) to box 0 (proc 0), send the time of the first collision but also receive the time send by box 1
     elif rank == 1:
         comm.send(entry[0], dest=0, tag=1)
         t_r0 = comm.recv(source=0, tag=1)
-        if entry[0] >= t_r0:
-            n = 0
-            t = t_r0 # update time counter
-            heapq.heappush(heap, entry)
+        # we compare the first collision time to see which proc should go first
+        if entry[0] >= t_r0: # if time of first collision of rank 1 is larger than the time of the first collision of rank 0
+            n = 0 # then we should run rank 0 
+            t = t_r0 # update gloabl time counter
+            heapq.heappush(heap, entry) # now that we have seen that our first collision in rank 1 is not of interest, push it back to the heap
+
         else:
             t = entry[0] # update time counter
     
@@ -156,6 +154,7 @@ while t < T:
                 ###############         WORK IN PROGRESS       ###############
                     
                     comm.send(entry, dest=rank_receive, tag=2)
+                    IS.remove(entry[3])
                     ## still need some way to check if anything is being sent!
 
                 #### 
@@ -188,7 +187,7 @@ while t < T:
         new_entry = comm.recv(source=n, tag=2)
 
         if new_entry != None:
-            print('do something', new_entry)
+            #print('do something', new_entry)
             
             # updating last collision times
             L[new_entry[3].n] = new_entry[0]
@@ -205,7 +204,8 @@ while t < T:
             
             #save previous pos and vel
             simulation.append([new_entry[0], new_entry[3].n, posi, veli, new_entry[4]])
-            
+
+                       
             # update heap
             for i in IS:
                 # collisions with first sphere
@@ -213,7 +213,7 @@ while t < T:
                 if dt != None:
                     heapq.heappush(heap, (dt + new_entry[0],new_entry[0],i.n, i, new_entry[3]))
             IS.append(new_entry[3])
-            
+                        
             #update heap with wall collissions
             dtw, w = wall_collisions(new_entry[3],subbox)
             if dtw != None:
@@ -224,6 +224,23 @@ while t < T:
 
 print("rank and heap",rank,heap)
 print("rank and simulation",rank,simulation)
+
+if rank == 1: 
+    comm.send([simulation, inputs_pos, inputs_vel, inputs_rad], dest=0, tag=3)
+# from box 1(proc 1) to box 0 (proc 0), send the time of the first collision but also receive the time send by box 1
+elif rank == 0:
+    from1 = comm.recv(source=1, tag=3)
+    sim_r1 = from1[0]
+    inputs_pos1 = from1[1]
+    inputs_vel1 = from1[2]
+    inputs_rad1 = from1[3]
+    sim_total = combine_sim(simulation, sim_r1)
+    for i in inputs_pos1:
+         inputs_pos.append(i)
+    for i in inputs_vel1:
+         inputs_vel.append(i)
+
+    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(4)], name='animation{}'.format(rank))
 
 
 

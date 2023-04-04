@@ -76,7 +76,6 @@ def wall_collisions(i,subbox1):
             ry = topright[1] - (i.pos[1]+i.rad)
             dt = ry/i.vel[1]
             dts.append(dt)
-            print('topwall', dt)
             wall.append('top')
         elif i.vel[1] < 0:
             # collision with bottom wall
@@ -255,3 +254,96 @@ def update_heap(L,t,simulation,entry,initial_state,heap,subbox,special_walls_sub
                 t = entry[0]
 
     return (L,t,simulation,entry,heap)
+
+def First(a):
+    #### takes first element of list's tuple
+    #### for use in combine_sim
+    return a[0]
+
+
+def combine_sim(firstlist, secondlist):
+    #### firstlist is the simulation output for one box
+    #### secondlist is the simulation output for the other
+    
+    # appends all elements in second list to first
+    for i in secondlist:
+         firstlist.append(i)
+
+    # sorts combined list by First, the first element
+    firstlist.sort(key=First)
+    return firstlist
+
+def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
+    ## inputs contain a list of inputs for positions, velocities and radius
+
+    global pos, vel
+    #coordinate of each corner
+    topright = subbox[1]
+    bottomleft=subbox[3]
+
+    # positions, velocities and radius info
+    pos = np.array(inputs[0])
+    vel = np.array(inputs[1])
+    rad = inputs[2]
+
+    # step size for the simulations
+    dt = T/steps
+
+    # x and y coordinates of the positions 
+    xx = pos[:,0]
+    yy = pos[:,1]
+    pts_rad = (72*rad)**2  #size of the radius converted to matplotlib size 
+
+
+    # create a figure 
+    fig, ax = plt.subplots()
+    points = ax.scatter(xx,yy,s = pts_rad) # plotting all the particles coordinates 
+    ax.set_ylim(bottomleft[1],topright[1])
+    ax.set_xlim(bottomleft[0],topright[0])
+
+    # define this function inside the simulation function for the purpose of updating the plot (package for the animation)
+    def update(i):
+        # define as global to make them work properly
+        global pos, vel
+
+        # Sim_info is the list of all the collision that are happening, 
+        # sim_info[0] is the first entry for the heap that will happen
+        # Using the info from the first event, we update only the particles that concerned by 
+        # this collision and the rest of the particle continue their life happily with their 
+        # originel velocities and positions
+        if len(sim_info) == 0:
+            print('done')
+        else:
+            sim = sim_info[0]
+            t = dt*i
+            # when we get to the collision time
+            if t > sim[0]:
+                # if the lenght is 7, it is a collision bw particles 
+                if len(sim)==7:
+                    pos[sim[1],:] = sim[3] # new position of particle 1 
+                    pos[sim[2],:] = sim[4] # new position of particle 2 
+                    vel[sim[1],:] = sim[5] # new velocity of particle 1 
+                    vel[sim[2],:] = sim[6] # new velocity of particle 2
+                else: 
+                    # if the lenght is less, it is a collision bw particle-wall 
+                    pos[sim[1],:] = sim[2] # new position of particle 1
+                    vel[sim[1],:] = sim[3] # new velocity of particle 1
+                
+                sim_info.pop(0) # pop out the first entry as we used it 
+            
+            pos = pos + vel*dt # for all of the particles, work out where they will be next
+
+            # and this is the plotting
+            xx = pos[:,0]
+            yy = pos[:,1]
+            ax.clear()
+            ax.scatter(xx,yy,s = pts_rad)
+            ax.set_ylim(bottomleft[1],topright[1])
+            ax.set_xlim(bottomleft[0],topright[0])
+
+    def generate_points():
+        ax.scatter(xx,yy)
+
+
+    ani = animation.FuncAnimation(fig, update, init_func=generate_points, frames = steps, interval = T)
+    ani.save(name+".gif", writer='imagemagick', fps=4);
