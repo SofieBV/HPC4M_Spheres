@@ -60,7 +60,7 @@ def wall_collisions(i,subbox1):
     else:
         # collision with left wall
         if i.vel[0] < 0:
-            rx = -(i.pos[0]-i.rad -topleft[0])
+            rx = topleft[0]+i.rad - i.pos[0]
             dt = rx/i.vel[0]
             dts.append(dt)
             wall.append('left')
@@ -311,13 +311,12 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
         # Using the info from the first event, we update only the particles that concerned by 
         # this collision and the rest of the particle continue their life happily with their 
         # originel velocities and positions
-        if len(sim_info) == 0:
-            print('done')
-        else:
+        if len(sim_info) != 0:
             sim = sim_info[0]
             t = dt*i
             # when we get to the collision time
             if t > sim[0]:
+                print('sim time', t, sim[0])
                 # if the lenght is 7, it is a collision bw particles 
                 if len(sim)==7:
                     pos[sim[1],:] = sim[3] # new position of particle 1 
@@ -346,4 +345,4 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
 
 
     ani = animation.FuncAnimation(fig, update, init_func=generate_points, frames = steps, interval = T)
-    ani.save(name+".gif", writer='imagemagick', fps=4);
+    ani.save(name+".gif", writer='imagemagick', fps=10);

@@ -1,3 +1,5 @@
+import numpy as np
+
 def create_particles(N,l):
     ## Function to create a lot of particle inputs 
 
@@ -18,7 +20,7 @@ def create_particles(N,l):
         if i<N: # needs to be strictly under
             # Box 1: upper box
             # positions
-            posbox = np.array([round(np.random.uniform(-l/2+0.1,l/2-0.1),3),round(np.random.uniform(0,l/2-0.1),3)])
+            posbox = np.array([round(np.random.uniform(-l/2+0.1,l/2-0.1),3),round(np.random.uniform(0.1,l/2-0.1),3)])
             input_pos_1.append(posbox)
 
             # velocities
@@ -33,7 +35,7 @@ def create_particles(N,l):
         else:
             # Box 2: lower box
             # positions
-            posbox= np.array([round(np.random.uniform(-l/2+0.1,l/2),3), round(np.random.uniform(-l/2+0.1,0),3)])
+            posbox= np.array([round(np.random.uniform(-l/2+0.1,l/2-0.1),3), round(np.random.uniform(-l/2+0.1,-0.1),3)])
             input_pos_2.append(posbox)
 
             # velocities
@@ -48,4 +50,4 @@ def create_particles(N,l):
         input_vel_all.append(velbox)
         name_box_all.append(i)
 
-    return(input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all)
+    return input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all
