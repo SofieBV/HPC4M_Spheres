@@ -108,4 +108,4 @@ while t < T:
             t = entry[0]
 
 print(simulation)
-simulate(simulation, box, T, 1000, [inputs_pos, inputs_vel,inputs_rad], name='animation_serial')
+simulate(simulation, box, T, 200, [inputs_pos, inputs_vel,inputs_rad], name='animation_serial')

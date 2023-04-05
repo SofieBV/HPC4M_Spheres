@@ -275,6 +275,8 @@ def combine_sim(firstlist, secondlist):
 
 def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
     ## inputs contain a list of inputs for positions, velocities and radius
+    #plt.rcParams['animation.ffmpeg_path'] = 'ffmpeg'
+    plt.rcParams['animation.ffmpeg_path'] = 'ffmpeg'
 
     global pos, vel
     #coordinate of each corner
@@ -323,19 +325,24 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
                     pos[sim[2],:] = sim[4] # new position of particle 2 
                     vel[sim[1],:] = sim[5] # new velocity of particle 1 
                     vel[sim[2],:] = sim[6] # new velocity of particle 2
+                    pos[sim[1],:] = pos[sim[1],:] + vel[sim[1],:]*(t-sim[0])
+                    pos[sim[2],:] = pos[sim[2],:] + vel[sim[2],:]*(t-sim[0])
                 else: 
                     # if the lenght is less, it is a collision bw particle-wall 
                     pos[sim[1],:] = sim[2] # new position of particle 1
                     vel[sim[1],:] = sim[3] # new velocity of particle 1
+                    pos[sim[1],:] = pos[sim[1],:] + vel[sim[1],:]*(t-sim[0])
                 
                 sim_info.pop(0) # pop out the first entry as we used it 
-            
+                
+            #else:
+                
             pos = pos + vel*dt # for all of the particles, work out where they will be next
 
             # and this is the plotting
             xx = pos[:,0]
             yy = pos[:,1]
-            ax.clear()
+            ax.cla()
             ax.scatter(xx,yy,s = pts_rad)
             ax.set_ylim(bottomleft[1],topright[1])
             ax.set_xlim(bottomleft[0],topright[0])
@@ -345,4 +352,7 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
 
 
     ani = animation.FuncAnimation(fig, update, init_func=generate_points, frames = steps, interval = T)
-    ani.save(name+".gif", writer='imagemagick', fps=10);
+    #Writer = animation.writers['ffmpeg']
+    #writer = Writer(fps=100, bitrate=1800)
+    FFwriter = animation.FFMpegWriter()
+    ani.save(name+".gif", writer=FFwriter)
