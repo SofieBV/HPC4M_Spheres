@@ -2,6 +2,7 @@ import numpy as np
 
 def create_particles(N,l):
     ## Function to create a lot of particle inputs 
+    np.random.seed(1234)
 
     # N number of particle in each box
     input_pos_1 = []

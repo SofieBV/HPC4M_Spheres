@@ -21,7 +21,7 @@ print(np.shape(inputs_vel))
 #### throws up error due to lack of wall ####
 
 T = 2
-IS = initial_state([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], inputs_pos, inputs_vel, inputs_rad, inputs_mass)
+IS = initial_state(name_box_all, inputs_pos, inputs_vel, inputs_rad, inputs_mass)
 L = np.zeros(len(IS)) # last collision time for each atom
 simulation = []
 heap = create_heap(IS, box)
@@ -32,7 +32,7 @@ while t < T:
     print(t)
     # possible collision
     entry = heapq.heappop(heap)
-    print(entry)
+    # print(entry)
     
     if not isinstance(entry[4],str):
         # checking if collision is valid event
@@ -51,7 +51,7 @@ while t < T:
             
             # new particle pos and vel
             posi, veli, posj, velj = collision(entry)
-            print(posi, veli, posj, velj)
+            #print(posi, veli, posj, velj)
             
             #save previous pos and vel
             simulation.append([entry[0], entry[3].n, entry[4].n, posi, posj, veli, velj])
@@ -98,7 +98,7 @@ while t < T:
             
             # new particle pos and vel
             posi, veli, posj, velj = collision(entry)
-            print(posi, veli, posj, velj)
+            #print(posi, veli, posj, velj)
             
             #save previous pos and vel
             simulation.append([entry[0], entry[3].n, posi, veli, entry[4]])
@@ -110,13 +110,13 @@ while t < T:
             for i in IS:
                 # collisions with first sphere
                 # let's first evaluate position of that sphere at this time
-                print('dt',L[i.n],entry[0], entry[0] - L[i.n])
+                #print('dt',L[i.n],entry[0], entry[0] - L[i.n])
                 new_pos = i.pos + i.vel*(entry[0] - L[i.n])
                 #new_pos = i.pos
                 dt = check_collision(i, new_pos, entry[3])
-                print('new dt', dt)
+                #print('new dt', dt)
                 if dt != None:
-                    print('heap inputs', dt + entry[0],entry[0],i.n, i, entry[3])
+                    #print('heap inputs', dt + entry[0],entry[0],i.n, i, entry[3])
                     heapq.heappush(heap, (dt + entry[0],entry[0],i.n, i, entry[3]))
             
             #update heap with wall collissions

@@ -148,6 +148,22 @@ def combine_sim(firstlist, secondlist):
     # sorts combined list by First, the first element
     firstlist.sort(key=First)
     return firstlist
+def get_list_relevant_events(t,dt,sim_info):
+        t_next=t+dt
+        j = 0
+        stop_looking=0 # the condition to keep looping, if you pass the next time t+dt, just stop looking
+        list_update = [] #the list of update to make in the simulation 
+        while stop_looking==0: # cha
+            time_simj = sim_info[j][0]
+            if time_simj>t and time_simj<=t_next:
+                list_update.append(sim_info[j])
+                j+=1
+            #because the heap is ordered properly, once you pass a time without event, any subsequent events 
+            # will be after t+dt, so we can give up looking for it
+            else:
+                stop_looking=1
+        return(list_update)
+
 
 def simulate(sim_info, subbox, T, steps, inputs, name='animation', parallel=False):
     ## inputs contain a list of inputs for positions, velocities and radius
@@ -190,10 +206,11 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation', parallel=Fals
         # this collision and the rest of the particle continue their life happily with their 
         # originel velocities and positions
         if len(sim_info) != 0:
-            sim = sim_info[0]
             t = dt*i
+            list_events_happened=get_list_relevant_events(t-dt,dt,sim_info)
+            for sim in list_events_happened:
             # when we get to the collision time
-            if t > sim[0]:
+            # if t > sim[0]:
                 print('sim time', t, sim[0])
                 # if the lenght is 7, it is a collision bw particles 
                 if len(sim)==7:
@@ -220,7 +237,7 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation', parallel=Fals
             yy = pos[:,1]
             ax.cla()
             ax.set_title("T="+str(round(t,3)))
-            ax.scatter(xx,yy,s = pts_rad,color=color_list)
+            ax.scatter(xx,yy,s = pts_rad) #,color=color_list)
             ax.set_ylim(bottomleft[1],topright[1])
             ax.set_xlim(bottomleft[0],topright[0])
             if parallel:
