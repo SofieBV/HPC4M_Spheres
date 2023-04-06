@@ -91,15 +91,17 @@ def wall_collisions(i,subbox1):
 
 def create_heap(IS,subbox):
     heap_list = []
+    k = 1
     for i in IS:
         dtw, w = wall_collisions(i,subbox)
         if dtw != None:
             heap_list.append((dtw,0,i.n,i,w))
-        for jn in range(i.n+1,len(IS)):
+        for jn in range(k,len(IS)):
             j = IS[jn]
             dt = check_collision(i, i.pos, j)
             if dt != None:
                 heap_list.append((dt,0,i.n,i,j))
+        k += 1
     
     heapq.heapify(heap_list)
     return heap_list
@@ -148,18 +150,22 @@ def combine_sim(firstlist, secondlist):
     # sorts combined list by First, the first element
     firstlist.sort(key=First)
     return firstlist
+
 def get_list_relevant_events(t,dt,sim_info):
         t_next=t+dt
         j = 0
         stop_looking=0 # the condition to keep looping, if you pass the next time t+dt, just stop looking
         list_update = [] #the list of update to make in the simulation 
         while stop_looking==0: # cha
-            time_simj = sim_info[j][0]
-            if time_simj>t and time_simj<=t_next:
-                list_update.append(sim_info[j])
-                j+=1
-            #because the heap is ordered properly, once you pass a time without event, any subsequent events 
-            # will be after t+dt, so we can give up looking for it
+            if len(sim_info) > j:
+                time_simj = sim_info[j][0]
+                if time_simj>t and time_simj<=t_next:
+                    list_update.append(sim_info[j])
+                    j+=1
+                #because the heap is ordered properly, once you pass a time without event, any subsequent events 
+                # will be after t+dt, so we can give up looking for it
+                else:
+                    stop_looking=1
             else:
                 stop_looking=1
         return(list_update)
@@ -250,5 +256,5 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation', parallel=Fals
     ani = animation.FuncAnimation(fig, update, init_func=generate_points, frames = steps, interval = T)
     #Writer = animation.writers['ffmpeg']
     #writer = Writer(fps=100, bitrate=1800)
-    FFwriter = animation.FFMpegWriter(fps = 100)
+    FFwriter = animation.FFMpegWriter(fps = 1000)
     ani.save(name+".gif", writer=FFwriter)

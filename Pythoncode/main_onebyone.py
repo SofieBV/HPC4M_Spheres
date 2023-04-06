@@ -1,5 +1,6 @@
 import numpy as np
 from functions_hardsphere import *
+from create_a_lot_of_particles import *
 
 
 
@@ -21,27 +22,34 @@ l=5 #size of the box
 # [top left, top right, bottom right, bottom left]
 # when the particle hits the first special wall, it's the rank 1 that needs to receive it
 # for example if the particle hits the wall bottom, rank 1 contains the bottom subbox and should be ready to receive it. 
-
+inputs_nr = 10
+input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all = create_particles(inputs_nr,l)
+    
 if rank==0:
-    inputs_nr = 2
-    inputs_pos =  [np.array([0.3,0.2]), np.array([1,0.6])]
-    inputs_vel =  [np.array([-0.97,0]), np.array([0,-1])]
-    inputs_rad =   0.1*np.ones(2)
-    inputs_mass =  0.1*np.ones(2)
+    
+    #inputs_nr = 2
+    #inputs_pos =  [np.array([0.3,0.2]), np.array([1,0.6])]
+    #inputs_vel =  [np.array([-0.97,0]), np.array([0,-1])]
+    inputs_pos = input_pos_1
+    inputs_vel = input_vel_1
+    inputs_rad =   0.1*np.ones(inputs_nr)
+    inputs_mass =  1*np.ones(inputs_nr)
     subbox= [[-l/2,l/2],[l/2,l/2],[l/2,0],[-l/2,0]] 
     special_walls_subbox = [["bottom"],[1]] 
-    IS = initial_state([0,1],inputs_pos,inputs_vel,inputs_rad,inputs_mass)
+    IS = initial_state(name_box1,inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
 
 elif rank==1:
-    inputs_nr = 2
-    inputs_pos =  [np.array([-1,-0.2]), np.array([1,-1])]
-    inputs_vel =  [np.array([0,1]), np.array([0,-0.1])]
-    inputs_rad =   0.1*np.ones(2)
-    inputs_mass =  0.1*np.ones(2)
+    #inputs_nr = 2
+    #inputs_pos =  [np.array([-1,-0.2]), np.array([1,-1])]
+    #inputs_vel =  [np.array([0,1]), np.array([0,-0.1])]
+    inputs_pos = input_pos_2
+    inputs_vel = input_vel_2
+    inputs_rad =   0.1*np.ones(inputs_nr)
+    inputs_mass =  1*np.ones(inputs_nr)
     subbox=[[-l/2,0],[l/2,0],[l/2,-l/2],[-l/2,-l/2]]
     special_walls_subbox = [["top"],[0]]
-    IS = initial_state([2,3],inputs_pos,inputs_vel,inputs_rad,inputs_mass)
+    IS = initial_state(name_box2,inputs_pos,inputs_vel,inputs_rad,inputs_mass)
     heap = create_heap(IS,subbox)
 else:
     heap=[]
@@ -50,8 +58,8 @@ else:
 #### initialise state and run collisions up to time T ####
 #### throws up error due to lack of wall ####
 
-T = 10 # until time T
-L = -np.ones(4) # last collision time for each atom,
+T = 5 # until time T
+L = np.zeros(2*inputs_nr) # last collision time for each atom,
 simulation = [] # any collisions that happened. 
 t = 0 # intitialise time
 
@@ -256,7 +264,7 @@ elif rank == 0:
     for i in inputs_vel1:
          inputs_vel.append(i)
 
-    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 1000, [inputs_pos, inputs_vel,0.1*np.ones(4)], name='animation{}'.format(rank), parallel = True)
+    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 1000, [inputs_pos, inputs_vel,0.1*np.ones(2*inputs_nr)], name='animation_parallel', parallel = True)
 
 
 

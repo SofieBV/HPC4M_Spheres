@@ -3,11 +3,11 @@ from functions_hardsphere import *
 from create_a_lot_of_particles import *
 
 l = 5
-inputs_nr = 4
-inputs_pos = [np.array([0.,0.]), np.array([0.,1.]), np.array([1.,0.]), np.array([1.,1.])]
-inputs_vel = [np.array([5,0]), np.array([0,0]), np.array([-5,0]), np.array([0,0])]
-inputs_rad = 0.1*np.ones(inputs_nr)
-inputs_mass = 1*np.ones(inputs_nr)
+#inputs_nr = 4
+#inputs_pos = [np.array([0.,0.]), np.array([0.,1.]), np.array([1.,0.]), np.array([1.,1.])]
+#inputs_vel = [np.array([5,0]), np.array([0,0]), np.array([-5,0]), np.array([0,0])]
+#inputs_rad = 0.1*np.ones(inputs_nr)
+#inputs_mass = 1*np.ones(inputs_nr)
 box = [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]]
 
 input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all = create_particles(10,l)
@@ -20,7 +20,7 @@ print(np.shape(inputs_vel))
 #### initialise state and run collisions up to time T ####
 #### throws up error due to lack of wall ####
 
-T = 2
+T = 5
 IS = initial_state(name_box_all, inputs_pos, inputs_vel, inputs_rad, inputs_mass)
 L = np.zeros(len(IS)) # last collision time for each atom
 simulation = []
