@@ -256,7 +256,7 @@ elif rank == 0:
     for i in inputs_vel1:
          inputs_vel.append(i)
 
-    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(4)], name='animation{}'.format(rank), parallel = True)
+    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 1000, [inputs_pos, inputs_vel,0.1*np.ones(4)], name='animation{}'.format(rank), parallel = True)
 
 
 
