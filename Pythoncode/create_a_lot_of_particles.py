@@ -24,7 +24,7 @@ def create_particles(N,l):
             input_pos_1.append(posbox)
 
             # velocities
-            velbox= np.array([round(np.random.uniform(-1,1),3), round(np.random.uniform(-1,1),3)])
+            velbox= np.array([round(np.random.uniform(-1,1),3), round(np.random.uniform(-10,10),3)])
             input_vel_1.append(velbox)
 
             # name 
@@ -39,7 +39,7 @@ def create_particles(N,l):
             input_pos_2.append(posbox)
 
             # velocities
-            velbox= np.array([round(np.random.uniform(-1,1),3), round(np.random.uniform(-1,1),3)])
+            velbox= np.array([round(np.random.uniform(-1,1),3), round(np.random.uniform(-10,10),3)])
             input_vel_2.append(velbox)
 
             # name 
