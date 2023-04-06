@@ -20,7 +20,7 @@ print(np.shape(inputs_vel))
 #### initialise state and run collisions up to time T ####
 #### throws up error due to lack of wall ####
 
-T = 5
+T = 0.5
 IS = initial_state(name_box_all, inputs_pos, inputs_vel, inputs_rad, inputs_mass)
 L = np.zeros(len(IS)) # last collision time for each atom
 simulation = []
@@ -128,4 +128,4 @@ while t < T:
             t = entry[0]
 
 print(simulation)
-simulate(simulation, box, T, 1000, [inputs_pos, inputs_vel,inputs_rad], name='animation_serial')
+simulate(simulation, box, T, 100, [inputs_pos, inputs_vel,inputs_rad], name='animation_serial')

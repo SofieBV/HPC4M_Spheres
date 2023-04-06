@@ -58,7 +58,7 @@ else:
 #### initialise state and run collisions up to time T ####
 #### throws up error due to lack of wall ####
 
-T = 5 # until time T
+T = 0.5 # until time T
 L = np.zeros(2*inputs_nr) # last collision time for each atom,
 simulation = [] # any collisions that happened. 
 t = 0 # intitialise time
@@ -264,7 +264,7 @@ elif rank == 0:
     for i in inputs_vel1:
          inputs_vel.append(i)
 
-    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 1000, [inputs_pos, inputs_vel,0.1*np.ones(2*inputs_nr)], name='animation_parallel', parallel = True)
+    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(2*inputs_nr)], name='animation_parallel', parallel = True)
 
 
 
