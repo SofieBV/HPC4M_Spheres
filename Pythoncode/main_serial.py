@@ -41,7 +41,7 @@ while t < T:
         elif entry[1] < L[entry[4].n]:
             pass
         else: # collision valid
-
+            # update the position of the particle
             new_pos = entry[3].pos + entry[3].vel*(entry[1] - L[entry[3].n])
             entry[3].update(new_pos, entry[3].vel)
             

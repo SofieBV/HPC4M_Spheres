@@ -71,6 +71,8 @@ while t < T:
     # from box 1(proc 1) to box 0 (proc 0), send the time of the first collision but also receive the time send by box 1
     elif rank == 1:
         comm.send(entry[0], dest=0, tag=1)
+        #while not comm.Iprobe(source = 0, tag=1):
+        #    x =1
         t_r0 = comm.recv(source=0, tag=1)
         # we compare the first collision time to see which proc should go first
         if entry[0] >= t_r0: # if time of first collision of rank 1 is larger than the time of the first collision of rank 0
@@ -82,6 +84,8 @@ while t < T:
             t = entry[0] # update time counter
     
     if rank == 0:
+        #while not comm.Iprobe(source = 1, tag=1):
+        #    x=1
         t_r1 = comm.recv(source=1, tag=1)
         if entry[0] <= t_r1:
             n = 0
@@ -98,7 +102,10 @@ while t < T:
             elif entry[1] < L[entry[4].n]:
                 pass
             else: # collision valid
-                
+                # update the position of the particle with the global time
+                new_pos = entry[3].pos + entry[3].vel*(entry[1] - L[entry[3].n])
+                entry[3].update(new_pos, entry[3].vel)
+                    
                 # updating last collision times
                 L[entry[3].n] = entry[0]
                 L[entry[4].n] = entry[0]
@@ -116,12 +123,15 @@ while t < T:
                 
                 # update heap
                 for i in IS:
+                     # let's first evaluate position of that sphere at this time
+                    new_pos = i.pos + i.vel*(entry[0] - L[i.n])
+                    
                     # collisions with first sphere
-                    dt = check_collision(i, entry[3])
+                    dt = check_collision(i, new_pos, entry[3])
                     if dt != None:
                         heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[3]))
                     # collisions with second
-                    dt = check_collision(i, entry[4])
+                    dt = check_collision(i, new_pos, entry[4])
                     if dt != None:
                         heapq.heappush(heap, (dt + entry[0],entry[0],i.n,i, entry[4]))
                 
@@ -170,8 +180,10 @@ while t < T:
                     
                     # update heap
                     for i in IS:
+                        # let's first evaluate position of that sphere at this time
+                        new_pos = i.pos + i.vel*(entry[0] - L[i.n])
                         # collisions with first sphere
-                        dt = check_collision(i, entry[3])
+                        dt = check_collision(i,new_pos, entry[3])
                         if dt != None:
                             heapq.heappush(heap, (dt + entry[0],entry[0],i.n, i, entry[3]))
                     
@@ -184,6 +196,8 @@ while t < T:
                     comm.send(None, dest=1-n, tag=2)  
     
     elif rank == 1-n:
+        #while not comm.Iprobe(source = n, tag=2):
+        #    x=1
         new_entry = comm.recv(source=n, tag=2)
 
         if new_entry != None:
@@ -204,15 +218,17 @@ while t < T:
             
             #save previous pos and vel
             simulation.append([new_entry[0], new_entry[3].n, posi, veli, new_entry[4]])
+            IS.append(new_entry[3])
 
-                       
             # update heap
             for i in IS:
+                # let's first evaluate position of that sphere at this time
+                new_pos = i.pos + i.vel*(new_entry[0] - L[i.n])
                 # collisions with first sphere
-                dt = check_collision(i, new_entry[3])
+                
+                dt = check_collision(i,new_pos, new_entry[3])
                 if dt != None:
                     heapq.heappush(heap, (dt + new_entry[0],new_entry[0],i.n, i, new_entry[3]))
-            IS.append(new_entry[3])
                         
             #update heap with wall collissions
             dtw, w = wall_collisions(new_entry[3],subbox)
@@ -222,7 +238,7 @@ while t < T:
 ############### TRY TO RUN THE COLLISION ##########################################################################################
 
 
-print("rank and heap",rank,heap)
+#print("rank and heap",rank,heap)
 print("rank and simulation",rank,simulation)
 
 if rank == 1: 
@@ -240,7 +256,7 @@ elif rank == 0:
     for i in inputs_vel1:
          inputs_vel.append(i)
 
-    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(4)], name='animation{}'.format(rank))
+    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(4)], name='animation{}'.format(rank), parallel = True)
 
 
 

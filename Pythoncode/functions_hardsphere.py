@@ -149,7 +149,7 @@ def combine_sim(firstlist, secondlist):
     firstlist.sort(key=First)
     return firstlist
 
-def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
+def simulate(sim_info, subbox, T, steps, inputs, name='animation', parallel=False):
     ## inputs contain a list of inputs for positions, velocities and radius
     #plt.rcParams['animation.ffmpeg_path'] = 'ffmpeg'
     plt.rcParams['animation.ffmpeg_path'] = 'ffmpeg'
@@ -171,7 +171,7 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
     xx = pos[:,0]
     yy = pos[:,1]
     pts_rad = (100*rad)**2  #size of the radius converted to matplotlib size 
-
+    color_list=["red","blue","green","yellow"]
 
     # create a figure 
     fig, ax = plt.subplots()
@@ -219,9 +219,12 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation'):
             xx = pos[:,0]
             yy = pos[:,1]
             ax.cla()
-            ax.scatter(xx,yy,s = pts_rad)
+            ax.set_title("T="+str(round(t,3)))
+            ax.scatter(xx,yy,s = pts_rad,color=color_list)
             ax.set_ylim(bottomleft[1],topright[1])
             ax.set_xlim(bottomleft[0],topright[0])
+            if parallel:
+                ax.plot(np.linspace(bottomleft[0],topright[0],10),np.zeros(10),color='k')
 
     def generate_points():
         ax.scatter(xx,yy)
