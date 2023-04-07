@@ -12,7 +12,7 @@ l = 5
 #inputs_mass = 1*np.ones(inputs_nr)
 box = [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]]
 
-inputs_nr = 200
+inputs_nr = 8
 input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all = create_particles(int(inputs_nr/2),l)
 inputs_pos = input_pos_all
 inputs_vel = input_vel_all
@@ -131,4 +131,4 @@ while t < T:
 print(time.process_time() - start_time, "seconds")
 
 #print(simulation)
-simulate(simulation, box, T, 100, [inputs_pos, inputs_vel,inputs_rad], name='animation_serial_slow')
+simulate(simulation, box, T, 100, [inputs_pos, inputs_vel,inputs_rad], name='output/animation_serial_less')

@@ -24,7 +24,7 @@ l=5 #size of the box
 # [top left, top right, bottom right, bottom left]
 # when the particle hits the first special wall, it's the rank 1 that needs to receive it
 # for example if the particle hits the wall bottom, rank 1 contains the bottom subbox and should be ready to receive it. 
-inputs_nr = 100
+inputs_nr = 4
 input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all = create_particles(inputs_nr,l)
     
 if rank==0:
@@ -260,7 +260,7 @@ elif rank == 0:
     for i in inputs_vel1:
          inputs_vel.append(i)
 
-    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(2*inputs_nr)], name='animation_parallel_slow', parallel = True)
+    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(2*inputs_nr)], name='output/animation_parallel_less', parallel = True)
 
 
 
