@@ -217,7 +217,7 @@ def simulate(sim_info, subbox, T, steps, inputs, name='animation', parallel=Fals
             for sim in list_events_happened:
             # when we get to the collision time
             # if t > sim[0]:
-                print('sim time', t, sim[0])
+                #print('sim time', t, sim[0])
                 # if the lenght is 7, it is a collision bw particles 
                 if len(sim)==7:
                     pos[sim[1],:] = sim[3] # new position of particle 1 

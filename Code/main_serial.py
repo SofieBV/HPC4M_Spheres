@@ -1,7 +1,9 @@
 import numpy as np
 from functions_hardsphere import *
 from create_a_lot_of_particles import *
+import time
 
+start_time = time.process_time()
 l = 5
 #inputs_nr = 4
 #inputs_pos = [np.array([0.,0.]), np.array([0.,1.]), np.array([1.,0.]), np.array([1.,1.])]
@@ -10,13 +12,13 @@ l = 5
 #inputs_mass = 1*np.ones(inputs_nr)
 box = [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]]
 
-input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all = create_particles(10,l)
-inputs_nr = 20
+inputs_nr = 200
+input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all = create_particles(int(inputs_nr/2),l)
 inputs_pos = input_pos_all
 inputs_vel = input_vel_all
 inputs_rad = 0.1*np.ones(inputs_nr)
 inputs_mass = 1*np.ones(inputs_nr)
-print(np.shape(inputs_vel))
+#print(np.shape(inputs_vel))
 #### initialise state and run collisions up to time T ####
 #### throws up error due to lack of wall ####
 
@@ -29,7 +31,7 @@ heap = create_heap(IS, box)
 
 t = 0
 while t < T:
-    print(t)
+    #print(t)
     # possible collision
     entry = heapq.heappop(heap)
     # print(entry)
@@ -64,7 +66,6 @@ while t < T:
             # update heap
             for i in IS:
                 # let's first evaluate position of that sphere at this time
-                print('dt',L[i.n],entry[0], entry[0] - L[i.n])
                 new_pos = i.pos + i.vel*(entry[0] - L[i.n])
                 #new_pos = i.pos
 
@@ -127,5 +128,7 @@ while t < T:
             # update time counter
             t = entry[0]
 
-print(simulation)
-simulate(simulation, box, T, 100, [inputs_pos, inputs_vel,inputs_rad], name='animation_serial')
+print(time.process_time() - start_time, "seconds")
+
+#print(simulation)
+simulate(simulation, box, T, 100, [inputs_pos, inputs_vel,inputs_rad], name='animation_serial_slow')

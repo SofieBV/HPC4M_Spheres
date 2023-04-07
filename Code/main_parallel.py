@@ -1,6 +1,7 @@
 import numpy as np
 from functions_hardsphere import *
 from create_a_lot_of_particles import *
+import time
 
 
 
@@ -14,6 +15,7 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 nr_proc = comm.Get_size()
 #########################################################################################################
+start_time = time.process_time()
 
 ############################### DEFINING THE INITIAL CONDITIONS #############################################
 l=5 #size of the box
@@ -22,7 +24,7 @@ l=5 #size of the box
 # [top left, top right, bottom right, bottom left]
 # when the particle hits the first special wall, it's the rank 1 that needs to receive it
 # for example if the particle hits the wall bottom, rank 1 contains the bottom subbox and should be ready to receive it. 
-inputs_nr = 10
+inputs_nr = 100
 input_pos_1, input_pos_2, input_pos_all, input_vel_1, input_vel_2, input_vel_all, name_box1, name_box2, name_box_all = create_particles(inputs_nr,l)
     
 if rank==0:
@@ -79,8 +81,6 @@ while t < T:
     # from box 1(proc 1) to box 0 (proc 0), send the time of the first collision but also receive the time send by box 1
     elif rank == 1:
         comm.send(entry[0], dest=0, tag=1)
-        #while not comm.Iprobe(source = 0, tag=1):
-        #    x =1
         t_r0 = comm.recv(source=0, tag=1)
         # we compare the first collision time to see which proc should go first
         if entry[0] >= t_r0: # if time of first collision of rank 1 is larger than the time of the first collision of rank 0
@@ -92,8 +92,6 @@ while t < T:
             t = entry[0] # update time counter
     
     if rank == 0:
-        #while not comm.Iprobe(source = 1, tag=1):
-        #    x=1
         t_r1 = comm.recv(source=1, tag=1)
         if entry[0] <= t_r1:
             n = 0
@@ -204,12 +202,9 @@ while t < T:
                     comm.send(None, dest=1-n, tag=2)  
     
     elif rank == 1-n:
-        #while not comm.Iprobe(source = n, tag=2):
-        #    x=1
         new_entry = comm.recv(source=n, tag=2)
 
         if new_entry != None:
-            #print('do something', new_entry)
             
             # updating last collision times
             L[new_entry[3].n] = new_entry[0]
@@ -245,9 +240,10 @@ while t < T:
 
 ############### TRY TO RUN THE COLLISION ##########################################################################################
 
+print(time.process_time() - start_time, "seconds")
 
 #print("rank and heap",rank,heap)
-print("rank and simulation",rank,simulation)
+#print("rank and simulation",rank,simulation)
 
 if rank == 1: 
     comm.send([simulation, inputs_pos, inputs_vel, inputs_rad], dest=0, tag=3)
@@ -264,7 +260,7 @@ elif rank == 0:
     for i in inputs_vel1:
          inputs_vel.append(i)
 
-    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(2*inputs_nr)], name='animation_parallel', parallel = True)
+    simulate(sim_total, [[-l/2,l/2],[l/2,l/2],[l/2,-l/2],[-l/2,-l/2]], T, 100, [inputs_pos, inputs_vel,0.1*np.ones(2*inputs_nr)], name='animation_parallel_slow', parallel = True)
 
 
 
